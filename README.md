@@ -130,7 +130,7 @@ gunicorn app:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 
 ## 📊 Model Performansı
 
-- **Doğruluk**: %95+
+- **Doğruluk**: %99+
 - **Desteklenen Dil**: Türkçe
 - **Maksimum Mesaj Uzunluğu**: 500 karakter
 - **Model Boyutu**: ~50MB
@@ -161,3 +161,4 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosy
 ---
 
 ⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!
+
