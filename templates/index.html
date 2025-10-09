@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Spam Tespiti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { scrollbar-gutter: stable both-edges; }
+    :root {
+      --bg: #0b1020;
+      --card: #0f1733;
+      --muted: #9aa4b2;
+      --text: #e7ecf3;
+      --primary: #5b8cff;
+      --primary-600: #3f6cf3;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --ring: rgba(91, 140, 255, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(91, 140, 255, 0.15), transparent),
+                  radial-gradient(1000px 700px at -10% 110%, rgba(34, 197, 94, 0.10), transparent),
+                  var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      overflow-x: hidden; /* prevent accidental horizontal scroll */
+      overflow-y: auto;   /* stabilize vertical scroll behavior */
+      min-height: 100vh;
+    }
+
+    .container { width: 100%; max-width: 880px; }
+
+    .header {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), #8ab6ff);
+      display: grid; place-items: center; font-weight: 800; color: white;
+      box-shadow: 0 10px 25px rgba(91, 140, 255, 0.35);
+    }
+    .title { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 60%), var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .input-row { display: grid; gap: 14px; grid-template-columns: 1fr; }
+    .input-row > * { min-width: 0; }
+    @media (min-width: 780px) {
+      .input-row { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+    }
+
+    textarea {
+      width: 100%; min-height: 160px; resize: vertical;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text);
+      padding: 14px 14px 44px 14px;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 6px var(--ring);
+      background: rgba(255,255,255,0.04);
+    }
+    .help {
+      margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.4;
+    }
+
+    .side {
+      display: grid; gap: 12px;
+      min-width: 0;
+    }
+
+    .btn {
+      appearance: none; border: none; outline: none; cursor: pointer;
+      background: linear-gradient(180deg, var(--primary), var(--primary-600));
+      color: white; font-weight: 700; letter-spacing: .2px;
+      padding: 12px 16px; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 10px 25px rgba(91, 140, 255, 0.35);
+      transition: transform .04s ease, box-shadow .2s ease, opacity .2s;
+      width: 100%;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); box-shadow: 0 6px 16px rgba(91, 140, 255, 0.35); }
+    .btn[disabled] { opacity: .7; cursor: not-allowed; }
+
+    .result {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 14px;
+      display: grid; gap: 12px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px; font-weight: 700;
+      padding: 8px 12px; border-radius: 999px; width: max-content;
+    }
+    .badge.success { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.35); }
+    .badge.danger  { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+    .muted { color: var(--muted); font-size: 13px; }
+
+    .loader {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    
+
+    /* Counter */
+    .counter { margin-top: 6px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+    .counter .limit { color: #fca5a5; }
+
+    /* Badges & animations */
+    .badge.warning { background: rgba(245,158,11,0.18); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
+    .pop-in { animation: pop .22s ease-out; }
+    @keyframes pop { from { transform: scale(.95); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+
+    /* History */
+    .history { margin-top: 16px; display: grid; gap: 8px; }
+    .history h4 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+    .history-item { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); min-width: 0; }
+    .history-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 12px; min-width: 0; }
+    .time { font-size: 11px; color: var(--muted); }
+
+    .footer { margin-top: 18px; text-align: center; color: var(--muted); font-size: 12px; }
+    a { color: #9ab8ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">S</div>
+        <div>
+          <div class="title">SMS Spam Tespiti</div>
+          <div class="subtitle">Mesajınızı yazın, model spam olup olmadığını tahmin etsin.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="input-row">
+        <div>
+          <label for="message" class="muted">SMS Mesajı</label>
+          <textarea id="message" placeholder="Örn: Tebrikler! 10.000 TL kazandınız. Ödülünüz için hemen arayın..."></textarea>
+          <div class="counter"><span id="chars">0</span><span id="limit" class="limit" hidden>Maksimum aşıldı</span></div>
+        </div>
+        <div class="side">
+          <button id="predictBtn" class="btn">
+            <span id="btnIcon">🔍</span>
+            <span id="btnText">Tahmin Et</span>
+          </button>
+          <button id="clearBtn" class="btn" style="background: rgba(255,255,255,0.06); color: var(--text); box-shadow: none;">
+            🧹 Temizle
+          </button>
+
+          <div class="result" id="result" hidden>
+            <div id="label" class="badge">Sonuç</div>
+          </div>
+
+          <div class="history" id="history" hidden>
+            <h4>Son Tahminler</h4>
+            <div id="historyList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const messageEl = document.getElementById('message');
+    const predictBtn = document.getElementById('predictBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnText = document.getElementById('btnText');
+    const resultBox = document.getElementById('result');
+    const labelEl = document.getElementById('label');
+    
+    const charsEl = document.getElementById('chars');
+    const limitEl = document.getElementById('limit');
+    const clearBtn = document.getElementById('clearBtn');
+    const historyBox = document.getElementById('history');
+    const historyList = document.getElementById('historyList');
+    
+
+    function setLoading(isLoading) {
+      if (isLoading) {
+        predictBtn.setAttribute('disabled', 'true');
+        btnIcon.innerHTML = '';
+        const loader = document.createElement('span');
+        loader.className = 'loader';
+        btnIcon.appendChild(loader);
+        btnText.textContent = 'Tahmin ediliyor...';
+      } else {
+        predictBtn.removeAttribute('disabled');
+        btnIcon.textContent = '🔍';
+        btnText.textContent = 'Tahmin Et';
+      }
+    }
+
+    // Dark theme fixed by default (no toggle)
+
+    // Counter
+    const MAX_LEN = 500;
+    function updateCounter() {
+      const len = messageEl.value.length;
+      charsEl.textContent = len + ' / ' + MAX_LEN;
+      const over = len > MAX_LEN;
+      limitEl.hidden = !over;
+      predictBtn.disabled = over || len === 0;
+    }
+    messageEl.addEventListener('input', updateCounter);
+    updateCounter();
+
+    // Clear
+    function clearAll() {
+      messageEl.value = '';
+      updateCounter();
+      resultBox.hidden = true;
+      labelEl.className = 'badge';
+      historyBox.hidden = historyList.children.length === 0;
+      messageEl.focus();
+    }
+    clearBtn.addEventListener('click', clearAll);
+
+    function pushHistory(entry) {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      const badge = document.createElement('div');
+      badge.className = 'badge ' + (entry.value === 1 ? 'danger' : 'success');
+      badge.textContent = entry.value === 1 ? 'Spam' : 'Spam Değil';
+      const text = document.createElement('div');
+      text.className = 'history-text';
+      text.textContent = entry.text;
+      const time = document.createElement('div');
+      time.className = 'time';
+      time.textContent = new Date(entry.time).toLocaleTimeString();
+      item.appendChild(badge);
+      item.appendChild(text);
+      item.appendChild(time);
+      historyList.prepend(item);
+      while (historyList.children.length > 5) historyList.removeChild(historyList.lastChild);
+      historyBox.hidden = false;
+    }
+
+    async function predict() {
+      const text = messageEl.value.trim();
+      if (!text) {
+        messageEl.focus();
+        messageEl.reportValidity?.();
+        return;
+      }
+      setLoading(true);
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Message: text })
+        });
+        if (!res.ok) throw new Error('Sunucu hatası');
+        const data = await res.json();
+        const value = Number(data.predicted);
+
+        resultBox.hidden = false;
+        labelEl.className = 'badge ' + (value === 1 ? 'danger' : 'success') + ' pop-in';
+        labelEl.textContent = value === 1 ? 'Spam' : 'Spam Değil';
+        setTimeout(() => labelEl.classList.remove('pop-in'), 250);
+
+        pushHistory({ text, value, time: Date.now() });
+      } catch (err) {
+        resultBox.hidden = false;
+        labelEl.className = 'badge warning';
+        labelEl.textContent = 'Hata';
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    predictBtn.addEventListener('click', predict);
+    messageEl.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'enter') {
+        predict();
+      }
+      if (e.key === 'Escape') {
+        clearAll();
+      }
+    });
+  </script>
+</body>
+</html>
+
